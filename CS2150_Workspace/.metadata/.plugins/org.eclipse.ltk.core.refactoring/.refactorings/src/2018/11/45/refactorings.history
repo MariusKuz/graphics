@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Rename type &apos;aston.nabneyit.view.SimulatorView&apos; to &apos;AnimatedVew&apos;&#x0D;&#x0A;- Original project: &apos;src&apos;&#x0D;&#x0A;- Original element: &apos;aston.nabneyit.view.SimulatorView&apos;&#x0D;&#x0A;- Renamed element: &apos;aston.nabneyit.view.AnimatedVew&apos;&#x0D;&#x0A;- Update references to refactored element&#x0D;&#x0A;- Update textual occurrences in comments and strings" description="Rename type &apos;SimulatorView&apos;" flags="589830" id="org.eclipse.jdt.ui.rename.type" input="/&lt;aston.nabneyit.view{SimulatorView.java[SimulatorView" matchStrategy="1" name="AnimatedVew" qualified="false" references="true" similarDeclarations="false" stamp="1541789571366" textual="false" version="1.0"/>
+</session>

@@ -1,0 +1,32 @@
+import java.util.List;
+
+public class Dance {
+
+	
+	private int no;
+	private Costume customDesign;
+	private List<DanceGroup> dancegroup;
+	
+	
+	public int getNo() {
+		return no;
+	}
+	public void setNo(int no) {
+		this.no = no;
+	}
+	public Costume getCustomDesign() {
+		return customDesign;
+	}
+	public void setCustomDesign(Costume customDesign) {
+		this.customDesign = customDesign;
+	}
+	public List<DanceGroup> getDancegroup() {
+		return dancegroup;
+	}
+	public void setDancegroup(List<DanceGroup> dancegroup) {
+		this.dancegroup = dancegroup;
+	}
+
+	
+	//private String name;
+}

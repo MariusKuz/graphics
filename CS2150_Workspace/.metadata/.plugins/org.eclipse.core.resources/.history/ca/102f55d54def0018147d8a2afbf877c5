@@ -1,0 +1,27 @@
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+public class DanceSchool {
+	
+	
+	
+	public DanceSchool() {
+		//load the DanceSchool file
+		//String.split(,)
+		
+	}
+	
+	public static void main(String args[]) throws FileNotFoundException {
+		
+		//Print program menu and loop till the user exit
+		
+		Scanner scanner = new Scanner(new File("src/csvFiles/danceShowData_danceGroups.csv"));
+        scanner.useDelimiter(",");
+        while(scanner.hasNext()){
+            System.out.print(scanner.next()+"|");
+        }
+        scanner.close();
+    }
+	}
+
+
