@@ -2,7 +2,6 @@ INDEX VERSION 1.131+C:\Users\mariu\Desktop\Uni Y2\Graphics\CS2150_Workspace\.met
 3523662158.index
 3494632151.index
 3886402465.index
-1946541299.index
 1051391019.index
 3266321134.index
 14682029.index

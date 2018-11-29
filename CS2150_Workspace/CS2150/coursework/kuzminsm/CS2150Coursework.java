@@ -35,7 +35,6 @@ public class CS2150Coursework extends GraphicsLab
     private Texture groundTexture;
     private Texture skyTexture;
     private Texture spaceTexture;
-    private Texture brickTexture;
     private final int planeList = 3;
     private final int houseList = 1;
     private final int launcherList = 2;
@@ -48,6 +47,7 @@ public class CS2150Coursework extends GraphicsLab
     private float launcherY = 1.0f;
     private float rocketScale = 1f;
     private float rocketSquareScale = 1f;
+    
     //TODO: Feel free to change the window title and default animation scale here
     public static void main(String args[])
     {   new CS2150Coursework().run(WINDOWED,"CS2150 Coursework Submission",0.01f);
@@ -58,7 +58,7 @@ public class CS2150Coursework extends GraphicsLab
     	groundTexture = loadTexture ("coursework/kuzminsm/textures/groundTexture.jpg");
     	skyTexture = loadTexture ("coursework/kuzminsm/textures/skyTexture.png");
     	spaceTexture = loadTexture ("coursework/kuzminsm/textures/spaceTexture.jpg");
-    	brickTexture = loadTexture ("coursework/kuzminsm/textures/brickTexture.jpg");
+    	
     	
     	float globalAmbient[]  ={0.2f,  0.2f,  0.2f, 1f};
     	GL11.glLightModel(GL11.GL_LIGHT_MODEL_AMBIENT,FloatBuffer.wrap(globalAmbient));
@@ -109,7 +109,12 @@ public class CS2150Coursework extends GraphicsLab
         	spacePlaneY -= 1.0f * getAnimationScale();
         	launcherY -= 1.0f * getAnimationScale();
         	rocketScale -= 0.03f * getAnimationScale();
-        	rocketSquareScale -=0.025f * getAnimationScale();
+        	
+        	if(rocketSquareScale >= 0.635f) {
+        		rocketSquareScale -=0.02f * getAnimationScale();
+        	}
+        	
+        	
         	}
          
         }
@@ -121,7 +126,10 @@ public class CS2150Coursework extends GraphicsLab
         	spacePlaneY += 1.0f * getAnimationScale();
         	launcherY+= 1.0f * getAnimationScale();
         	rocketScale += 0.03f * getAnimationScale();
-        	rocketSquareScale +=0.025f * getAnimationScale();
+        	
+        	if(rocketSquareScale <=1f) {
+        		rocketSquareScale +=0.02f * getAnimationScale();
+        	}
         	
         	}
          
@@ -143,6 +151,7 @@ public class CS2150Coursework extends GraphicsLab
     	
         GL11.glPushMatrix();
         {
+        	
             // disable lighting calculations so that they don't affect
             // the appearance of the texture 
             GL11.glPushAttrib(GL11.GL_LIGHTING_BIT);
@@ -263,33 +272,42 @@ public class CS2150Coursework extends GraphicsLab
         GL11.glPushMatrix();
         
         float scale2 = rocketSquareScale -0.3f;
+        float translationSq1 = rocketSquareScale -0.35f;
+        float translationSq2 = -1.65f-rocketSquareScale;
+        
+        float translationSq3 = rocketSquareScale - 10.5f;
+        float translationSq4 = - 9.5f-rocketSquareScale ;
+        
+        float translationYSq1 =  (rocketSquareScale-1.3f)/2f;
+        
         GL11.glPushMatrix();{
-        GL11.glTranslatef(0.65f, -0.3f, -10.0f);
+        	//right
+        GL11.glTranslatef(translationSq1, translationYSq1, -10.0f);
         GL11.glRotatef(0, 0, 0, 0);
         GL11.glScalef(scale2, scale2, scale2);
         GL11.glCallList(houseList);
         }
         GL11.glPopMatrix();
-        
+        //left
         GL11.glPushMatrix();{
-        GL11.glTranslatef(-0.65f, -0.3f, -10.0f);
+        GL11.glTranslatef((translationSq2+2.0f), translationYSq1, -10.0f);
         GL11.glScalef(scale2, scale2, scale2);
         GL11.glRotatef(180, 0, 1, 0);
         GL11.glCallList(houseList);
         }
         GL11.glPopMatrix();
         
-        
+        //front
         GL11.glPushMatrix();{
-        GL11.glTranslatef(0f, -0.3f, -9.5f);
+        GL11.glTranslatef(0f, translationYSq1, translationSq3);						 
         GL11.glScalef(scale2, scale2, scale2);
         GL11.glRotatef(-90, 0, 1, 0);
         GL11.glCallList(houseList);
         }
         GL11.glPopMatrix();
-        
+        //back
         GL11.glPushMatrix();{
-        GL11.glTranslatef(0.0f, -0.3f, -10.5f);
+        GL11.glTranslatef(0.0f, -0.3f, translationSq4);     
         GL11.glScalef(scale2, scale2, scale2);
         GL11.glRotatef(90, 0, 1, 0);
         GL11.glCallList(houseList);
@@ -301,7 +319,7 @@ public class CS2150Coursework extends GraphicsLab
         
         GL11.glPushMatrix();
         {
-           //CODE MISSING
+      
 
 
            
