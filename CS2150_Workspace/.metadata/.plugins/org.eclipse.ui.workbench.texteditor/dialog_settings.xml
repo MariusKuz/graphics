@@ -8,6 +8,8 @@
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="GL_FILL"/>
+			<item value="spaceTexture"/>
 			<item value="ambien"/>
 			<item value="["/>
 			<item value="{"/>
@@ -21,8 +23,6 @@
 			<item value="planeList"/>
 			<item value="drawUnitCube"/>
 			<item value="checkSceneInput"/>
-			<item value="checksceneinput"/>
-			<item value="ambient"/>
 		</list>
 		<list key="replacehistory">
 		</list>
