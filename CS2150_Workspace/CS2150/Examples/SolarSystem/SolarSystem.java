@@ -97,7 +97,7 @@ public class SolarSystem extends GraphicsLab
         GL11.glPopMatrix();
 
         // rotate Mars around the Sun
-        GL11.glRotatef((360.0f*timeday/467.0f),0.0f,1.0f,0.0f);
+        GL11.glRotatef((360.0f*timeday/467.0f),0.0f,1.0f,1.0f);
         // Mars is 8 units from the Sun
         GL11.glTranslatef(8.0f,0.0f,0.0f);
         // draw Mars

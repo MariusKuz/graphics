@@ -1,0 +1,1147 @@
+/* CS2150Coursework.java
+ * university username: kuzminsm
+ * full name: Marius Kuzminskas
+ *
+ * Scene Graph:
+ *  Scene origin
+ *  |
+ *
+ *  TODO: Provide a scene graph for your submission
+ */
+package coursework.kuzminsm;
+
+import org.lwjgl.opengl.GL11;
+import org.lwjgl.util.glu.Cylinder;
+import org.lwjgl.util.glu.Sphere;
+import org.lwjgl.input.Keyboard;
+import org.newdawn.slick.opengl.Texture;
+import GraphicsLab.*;
+
+//colours
+//moonTexture
+//2nd moon
+
+/**
+ * In this animation you can launch the rocket up in the sky using button R on
+ * your keyboard and F to land it back down. Once you get up in the sky you can
+ * view Mars orbiting around with two moons around it.
+ *
+ * <p>
+ * Controls:
+ * <ul>
+ * <li>Press the escape key to exit the application.
+ * <li>Hold the x, y and z keys to view the scene along the x, y and z axis,
+ * respectively
+ * <li>While viewing the scene along the x, y or z axis, use the up and down
+ * cursor keys to increase or decrease the viewpoint's distance from the scene
+ * origin
+ * <li>Press and hold R to launch the rocket into space
+ * <li>Press and hold F to make the rocket go back down to earth
+ * <li>Press Q to make mars appear(only works while up in space)
+ * <li>Pres SPACE to reset the animation to its starting position
+ * </ul>
+ * 
+ *
+ */
+public class CS2150Coursework extends GraphicsLab {
+	//initialise all of the textures
+	private Texture groundTexture;
+	private Texture skyTexture;
+	private Texture spaceTexture;
+	private Texture marsTexture;
+
+	//initialise all the lists required
+	private final int planeList = 3;
+	private final int rocketFineList = 1;
+	private final int launcherList = 2;
+
+	//initialise the variable coordinates required
+	private float groundPlaneY = -1.0f;
+	private float backPlaneY = 4.0f;
+	private float spacePlaneY = 18.0f;
+	private float maxSpaceY = 18f;
+	private float minSpaceY = -1f;
+	private float launcherYCorrd = 1.0f;
+	private float rocketScale = 1f;
+	private float rocketSquareScale = 1f;
+	private float marsPosition = 0.0f;
+	private float sphereYCoord = 20f;
+
+	public static void main(String args[]) {
+		new CS2150Coursework().run(WINDOWED, "CS2150 Coursework Submission", 0.005f);
+	}
+
+	protected void initScene() throws Exception {
+		//load the textures necessary
+		groundTexture = loadTexture("coursework/kuzminsm/textures/groundTexture.jpg");
+		skyTexture = loadTexture("coursework/kuzminsm/textures/skyTexture.png");
+		spaceTexture = loadTexture("coursework/kuzminsm/textures/spaceTexture.jpg");
+		marsTexture = loadTexture("coursework/kuzminsm/textures/marsTexture.jpg");
+
+		float globalAmbient[] = { 0.2f, 0.2f, 0.2f, 1f }; //set up global ambient lighting
+		GL11.glLightModel(GL11.GL_LIGHT_MODEL_AMBIENT, FloatBuffer.wrap(globalAmbient));
+		// light for the first scene is white
+		float diffuse0[] = { 0.6f, 0.6f, 0.6f, 1.0f };
+		// add ambient
+		float ambient0[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+		//position the lighting
+		float position0[] = { 0.0f, 10.0f, 5.0f, 1.0f };
+
+		// properties of the first light
+		GL11.glLight(GL11.GL_LIGHT0, GL11.GL_AMBIENT, FloatBuffer.wrap(ambient0));
+		GL11.glLight(GL11.GL_LIGHT0, GL11.GL_DIFFUSE, FloatBuffer.wrap(diffuse0));
+		GL11.glLight(GL11.GL_LIGHT0, GL11.GL_SPECULAR, FloatBuffer.wrap(diffuse0));
+		GL11.glLight(GL11.GL_LIGHT0, GL11.GL_POSITION, FloatBuffer.wrap(position0));
+		// enable the first light
+		GL11.glEnable(GL11.GL_LIGHT0);
+		GL11.glEnable(GL11.GL_LIGHTING);
+		GL11.glEnable(GL11.GL_NORMALIZE);
+
+		//prepare the required lists for the animation
+		GL11.glNewList(planeList, GL11.GL_COMPILE);
+		{
+			drawUnitPlane();
+		}
+		GL11.glEndList();
+
+		GL11.glNewList(rocketFineList, GL11.GL_COMPILE);
+		{
+			drawRocketFins();
+		}
+		GL11.glEndList();
+
+		GL11.glNewList(launcherList, GL11.GL_COMPILE);
+		{
+			drawLauncher();
+		}
+		GL11.glEndList();
+
+	}
+
+	protected void checkSceneInput() {
+		if (Keyboard.isKeyDown(Keyboard.KEY_R)) { //if press R then make the rocket launch
+			if (spacePlaneY > minSpaceY) {
+				groundPlaneY -= 1.0f * getAnimationScale();
+				backPlaneY -= 1.0f * getAnimationScale();
+				spacePlaneY -= 1.0f * getAnimationScale();
+				launcherYCorrd -= 1.0f * getAnimationScale();
+				rocketScale -= 0.03f * getAnimationScale();
+				sphereYCoord -= 1.0f * getAnimationScale();
+
+				if (rocketSquareScale >= 0.635f) { //make so the fins don't get too small
+					rocketSquareScale -= 0.02f * getAnimationScale();
+				}
+
+			}
+
+		}
+
+		if (Keyboard.isKeyDown(Keyboard.KEY_F)) { //press F to make the rocket go down
+			if (spacePlaneY < maxSpaceY) {
+				groundPlaneY += 1.0f * getAnimationScale();
+				backPlaneY += 1.0f * getAnimationScale();
+				spacePlaneY += 1.0f * getAnimationScale();
+				launcherYCorrd += 1.0f * getAnimationScale();
+				rocketScale += 0.03f * getAnimationScale();
+				sphereYCoord += 1.0f * getAnimationScale();
+				if (rocketSquareScale <= 1f) {      //make so the fins don't get too big
+					rocketSquareScale += 0.02f * getAnimationScale();
+				}
+
+			}
+
+		}
+
+		if (Keyboard.isKeyDown(Keyboard.KEY_Q)) {
+			//make the mars appear in the location we can see it
+			marsPosition = 45f;
+		}
+
+		else if (Keyboard.isKeyDown(Keyboard.KEY_SPACE)) {
+			resetAnimations(); //reset animation
+		}
+
+	}
+
+	protected void updateScene() {
+
+		marsPosition += +1.0f * getAnimationScale(); //make mars rotate around
+	}
+
+	protected void renderScene() {
+		// draw ground plane
+		GL11.glPushMatrix();
+		{
+
+			// disable lighting calculations 
+			GL11.glPushAttrib(GL11.GL_LIGHTING_BIT);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			// change the geometry colour to white
+			Colour.WHITE.submit();
+			// enable texturing and bind it
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, groundTexture.getTextureID());
+
+			// position, scale and draw the ground plane
+			GL11.glTranslatef(0.0f, groundPlaneY, -10.0f); //plane goes down as the rocket launches
+			GL11.glScalef(25.0f, 1.0f, 20.0f);
+			GL11.glCallList(planeList); //call the list
+
+			// disable textures and reset lighting changes
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glPopAttrib();
+		}
+		GL11.glPopMatrix();
+
+		// draw the back plane
+		GL11.glPushMatrix();
+		{
+			// disable lighting calculations
+			GL11.glPushAttrib(GL11.GL_LIGHTING_BIT);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			// change the geometry colour to white 
+			Colour.WHITE.submit();
+			// enable texturing and bind it
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, skyTexture.getTextureID());
+			GL11.glTranslatef(0.0f, backPlaneY, -20.0f); // position,
+			GL11.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);//rotate
+			GL11.glScalef(25.0f, 1.0f, 10.0f);//scale
+			GL11.glCallList(planeList);//draw the planelist
+			GL11.glDisable(GL11.GL_TEXTURE_2D); // disable textures
+			GL11.glPopAttrib(); // reset local lighting changes
+		}
+		GL11.glPopMatrix();
+
+		// draw the space plane
+		GL11.glPushMatrix();
+		{
+			// disable lighting calculations
+			GL11.glPushAttrib(GL11.GL_LIGHTING_BIT);
+			GL11.glDisable(GL11.GL_LIGHTING);
+			Colour.WHITE.submit(); // change the geometry colour to white 
+			GL11.glEnable(GL11.GL_TEXTURE_2D); // enable texturing 
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, spaceTexture.getTextureID()); //bind it
+			GL11.glTranslatef(0.0f, spacePlaneY, -20.0f); // position,
+			GL11.glRotatef(90.0f, 1.0f, 0.0f, 0.0f);//rotate
+			GL11.glScalef(25.0f, 10.0f, 19f);//scale
+			GL11.glCallList(planeList);//draw the planelist
+			GL11.glDisable(GL11.GL_TEXTURE_2D);  // disable textures
+			GL11.glPopAttrib(); // reset local lighting changes
+		}
+		GL11.glPopMatrix();
+
+		GL11.glPushMatrix();
+		{
+			//draw the rocket cylinder
+			// shininess of the cylinder
+			float rocketCylinderShininess = 20.0f;
+			// specular reflection of the cylinder
+			float rocketFrontSpecular[] = { 0.7f, 0.7f, 0.7f, 1.0f };
+			// diffuse reflection of the front faces of the cylinder
+			float rocketFrontDiffuse[] = { 1f, 1f, 1f, 1.0f };
+
+			// set the material properties for the cylinder using OpenGL
+			GL11.glMaterialf(GL11.GL_FRONT, GL11.GL_SHININESS, rocketCylinderShininess);
+			GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SPECULAR, FloatBuffer.wrap(rocketFrontSpecular));
+			GL11.glMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE, FloatBuffer.wrap(rocketFrontDiffuse));
+
+			// position the cylinder
+			GL11.glTranslatef(0.0f, -0.65f, -10f);
+			GL11.glScalef(rocketScale, rocketScale, rocketScale); //scale it
+
+			GL11.glPushMatrix();
+			{
+				GL11.glRotatef(-90.0f, 1.0f, 0.0f, 0.0f); //rotate cylinder
+				new Cylinder().draw(0.5f, 0.5f, 3f, 10, 10); //draw cylinder
+			}
+			GL11.glPopMatrix();
+
+			// shininess of the cone
+			float coneFrontShininess = 20.0f;
+			// reflections on the cone specular/diffuse
+			float coneFrontSpecular[] = { 1f, 0.1f, 0.1f, 1.0f };
+			float coneFrontDiffuse[] = { 1f, 0.1f, 0.1f, 1.0f };
+
+			// set the material properties for the cone using OpenGL
+			GL11.glMaterialf(GL11.GL_FRONT, GL11.GL_SHININESS, coneFrontShininess);
+			GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SPECULAR, FloatBuffer.wrap(coneFrontSpecular));
+			GL11.glMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE, FloatBuffer.wrap(coneFrontDiffuse));
+
+		
+
+			GL11.glTranslatef(0.0f, 3.0f, 0.0f); //position the cone
+			GL11.glPushMatrix();
+			{
+
+				GL11.glRotatef(-90.0f, 1.0f, 0.0f, 0.0f); //rotate it 
+				new Cylinder().draw(0.5f, 0.0f, 1f, 10, 10); //draw it
+			}
+			GL11.glPopMatrix();
+		}
+		GL11.glPopMatrix();
+
+		GL11.glPushMatrix();
+
+		float finScaling= rocketSquareScale - 0.3f; //calculate the scaling needed when the rocket launches
+		float translationFrontFin = rocketSquareScale - 0.35f; //calculate the translation that needs to be made after scaling
+		float translationRightFin = -1.65f - rocketSquareScale; //translation for scaling for nd fin
+		float translationBackFin = rocketSquareScale - 10.5f; //translation for scaling for 3nd fin
+		float translationLeftFin = -9.5f - rocketSquareScale; //translation for scaling for 4nd fin
+		float translationYFinCord = (rocketSquareScale - 1.3f) / 2f; //translation for scaling for the last fin
+
+		GL11.glPushMatrix();
+		{
+			// right fin
+			GL11.glTranslatef(translationFrontFin, translationYFinCord, -10.0f); //position it
+			GL11.glScalef(finScaling, finScaling, finScaling); //scale it
+			GL11.glCallList(rocketFineList); //call it
+		}
+		GL11.glPopMatrix();
+		GL11.glPushMatrix();
+		{
+			// left fin
+			GL11.glTranslatef((translationRightFin + 2.0f), translationYFinCord, -10.0f); //translate it
+			GL11.glScalef(finScaling, finScaling, finScaling); //scale it
+			GL11.glRotatef(180, 0, 1, 0);// rotate it
+			GL11.glCallList(rocketFineList);// call it
+		}
+		GL11.glPopMatrix();
+
+		GL11.glPushMatrix();
+		{
+
+			// front fin
+			GL11.glTranslatef(0f, translationYFinCord, translationBackFin); //position it
+			GL11.glScalef(finScaling, finScaling, finScaling); //scale it
+			GL11.glRotatef(-90, 0, 1, 0); //rotate it
+			GL11.glCallList(rocketFineList); //call it
+		}
+		GL11.glPopMatrix();
+		GL11.glPushMatrix();
+		{
+			// back fin
+			GL11.glTranslatef(0.0f, -0.3f, translationLeftFin); //translate it
+			GL11.glScalef(finScaling, finScaling, finScaling); //scale it 
+			GL11.glRotatef(90, 0, 1, 0); //rotate it 
+			GL11.glCallList(rocketFineList); //call it
+		}
+		GL11.glPopMatrix();
+		GL11.glPopMatrix();
+		GL11.glPushMatrix();
+		{
+
+			// position and scale the launcher
+			GL11.glTranslatef(2.75f, launcherYCorrd, -12f);
+			GL11.glScalef(1.2f, 1.2f, 1.2f);
+			// rotate the house a little so that it supports the rocket
+			GL11.glRotatef(35.0f, 0.0f, 1.0f, 0.0f);
+			//shininess of the launcher
+			float launcherFrontShininess = 60.0f;
+			// specular reflection of the front faces of launcher
+			float launcherFrontSpecular[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+			// diffuse reflection of the front faces of the launcher
+			float launcherFrontDiffuse[] = { 0.2f, 0.2f, 0.2f, 1.0f };
+
+			// Set the material properties for the launcher using OpenGL
+			GL11.glMaterialf(GL11.GL_FRONT, GL11.GL_SHININESS, launcherFrontShininess);
+			GL11.glMaterial(GL11.GL_FRONT, GL11.GL_SPECULAR, FloatBuffer.wrap(launcherFrontSpecular));
+			GL11.glMaterial(GL11.GL_FRONT, GL11.GL_DIFFUSE, FloatBuffer.wrap(launcherFrontDiffuse));
+			GL11.glMaterial(GL11.GL_FRONT, GL11.GL_AMBIENT, FloatBuffer.wrap(launcherFrontDiffuse));
+
+			// draw the base of the launcher using its display list
+			GL11.glCallList(launcherList);
+		}
+		GL11.glPopMatrix();
+		// store the current model view matrix (viewer origin)
+		GL11.glPushMatrix();
+		{
+			GL11.glPushAttrib(GL11.GL_LIGHTING_BIT);
+			GL11.glDisable(GL11.GL_LIGHTING); //disable 
+            // change the geometry colour to white
+            // is bright and details can be seen clearly
+			Colour.WHITE.submit();
+			// rotate the mars around the viewing origin
+			GL11.glRotatef((360.0f * marsPosition / 300.0f), 0.0f, 1.0f, 0.0f);
+			// the mars is 5 units from the viewer origin
+			GL11.glTranslatef(8.0f, sphereYCoord, 0.0f);
+            // enable texturing and bind an appropriate texture
+			GL11.glEnable(GL11.GL_TEXTURE_2D);
+			GL11.glBindTexture(GL11.GL_TEXTURE_2D, marsTexture.getTextureID());
+
+			// enable the texture space S,T
+			GL11.glEnable(GL11.GL_TEXTURE_GEN_S);
+			GL11.glEnable(GL11.GL_TEXTURE_GEN_T);
+
+			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MAG_FILTER, GL11.GL_NEAREST);
+			GL11.glTexParameteri(GL11.GL_TEXTURE_2D, GL11.GL_TEXTURE_MIN_FILTER, GL11.GL_NEAREST);
+
+			// Set The Texture Generation Mode For S To Sphere Mapping
+			GL11.glTexGeni(GL11.GL_S, GL11.GL_TEXTURE_GEN_MODE, GL11.GL_SPHERE_MAP);
+			GL11.glTexGeni(GL11.GL_T, GL11.GL_TEXTURE_GEN_MODE, GL11.GL_SPHERE_MAP);
+			// draw the Earth
+			drawSphere(Colour.YELLOW, 0.3f);
+			//disable previous textures so it doesnt apply on moons
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glDisable(GL11.GL_TEXTURE_GEN_S);
+			GL11.glDisable(GL11.GL_TEXTURE_GEN_T);
+			GL11.glPopAttrib();
+
+			// rotate the Moon1 around mars
+			GL11.glRotatef((360.0f * marsPosition * 0.009f), 0.0f, 1.0f, 1.0f);
+			// the Moon is .5 units from mars
+			GL11.glTranslatef(0.5f, 0.0f, 0.0f);
+
+			// draw the moon1
+			drawSphere(Colour.YELLOW, 0.15f);
+			
+			GL11.glRotatef((360.0f * marsPosition * 0.009f), 0.0f, 1.0f, 1.0f);
+			// the Moon is .5 units from mars
+			GL11.glTranslatef(0.8f, 0.0f, 0.0f);
+
+			// draw the moon1
+			drawSphere(Colour.YELLOW, 0.15f);
+
+		}
+		GL11.glPopMatrix();
+
+	}
+
+	protected void setSceneCamera() {
+		// call the default behaviour defined in GraphicsLab. This will set a default
+		// perspective projection
+		// and default camera settings ready for some custom camera positioning below...
+
+		super.setSceneCamera();
+
+	}
+
+	protected void cleanupScene() {// Empty
+	}
+
+	private void resetAnimations() {
+		//reset all coordinates to starting coordinates
+		groundPlaneY = -1.0f;
+		backPlaneY = 4.0f;
+		spacePlaneY = 18.0f;
+		maxSpaceY = 18f;
+		minSpaceY = -1f;
+		launcherYCorrd = 1.0f;
+		rocketScale = 1f;
+		rocketSquareScale = 1f;
+		marsPosition = 0.0f;
+		sphereYCoord = 20f;
+
+	}
+
+	private void drawUnitPlane() {
+		//plane unit vertexes
+		Vertex v1 = new Vertex(-0.5f, 0.0f, -0.5f); // left, back
+		Vertex v2 = new Vertex(0.5f, 0.0f, -0.5f); // right, back
+		Vertex v3 = new Vertex(0.5f, 0.0f, 0.5f); // right, front
+		Vertex v4 = new Vertex(-0.5f, 0.0f, 0.5f); // left, front
+
+		// draw the plane geometry. order the vertices so that the plane faces up
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			new Normal(v4.toVector(), v3.toVector(), v2.toVector(), v1.toVector()).submit(); //connect normals
+
+			GL11.glTexCoord2f(0.0f, 0.0f);
+			v4.submit(); //submit normals to correct places and apply textures
+
+			GL11.glTexCoord2f(1.0f, 0.0f);
+			v3.submit();
+
+			GL11.glTexCoord2f(1.0f, 1.0f);
+			v2.submit();
+
+			GL11.glTexCoord2f(0.0f, 1.0f);
+			v1.submit();
+		}
+		GL11.glEnd();
+
+		// if the user is viewing an axis, then also draw this plane
+		// using lines so that axis aligned planes can still be seen
+		if (isViewingAxis()) {
+			// also disable textures when drawing as lines
+			// so that the lines can be seen more clearly
+			GL11.glPushAttrib(GL11.GL_TEXTURE_2D);
+			GL11.glDisable(GL11.GL_TEXTURE_2D);
+			GL11.glBegin(GL11.GL_LINE_LOOP);
+			{
+				v4.submit(); //submit the vertexes
+				v3.submit();
+				v2.submit();
+				v1.submit();
+			}
+			GL11.glEnd();
+			GL11.glPopAttrib();
+		}
+	}
+
+	private void drawRocketFins() {
+		// the vertices for the rocket fins (sqares)
+		Vertex v1 = new Vertex(-0.25f, -0.5f, 0.1f);
+		Vertex v2 = new Vertex(-0.25f, 0.5f, 0.1f);
+		Vertex v3 = new Vertex(0.25f, 0.1f, 0.1f);
+		Vertex v4 = new Vertex(0.25f, -1f, 0.1f);
+		Vertex v5 = new Vertex(-0.25f, -0.5f, -0.1f);
+		Vertex v6 = new Vertex(-0.25f, 0.5f, -0.1f);
+		Vertex v7 = new Vertex(0.25f, 0.1f, -0.1f);
+		Vertex v8 = new Vertex(0.25f, -1f, -0.1f);
+
+		// draw the near face:
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			new Normal(v3.toVector(), v2.toVector(), v1.toVector(), v4.toVector()).submit();
+
+			v3.submit();
+			v2.submit();
+			v1.submit();
+			v4.submit();
+		}
+		GL11.glEnd();
+
+		// draw the left face:
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			new Normal(v2.toVector(), v6.toVector(), v5.toVector(), v1.toVector()).submit();
+
+			v2.submit();
+			v6.submit();
+			v5.submit();
+			v1.submit();
+		}
+		GL11.glEnd();
+
+		// draw the right face:
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			new Normal(v7.toVector(), v3.toVector(), v4.toVector(), v8.toVector()).submit();
+
+			v7.submit();
+			v3.submit();
+			v4.submit();
+			v8.submit();
+		}
+		GL11.glEnd();
+
+		// draw the top face:
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			new Normal(v7.toVector(), v6.toVector(), v2.toVector(), v3.toVector()).submit();
+
+			v7.submit();
+			v6.submit();
+			v2.submit();
+			v3.submit();
+		}
+		GL11.glEnd();
+
+		// draw the bottom face:
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			new Normal(v4.toVector(), v1.toVector(), v5.toVector(), v8.toVector()).submit();
+
+			v4.submit();
+			v1.submit();
+			v5.submit();
+			v8.submit();
+		}
+		GL11.glEnd();
+
+		// draw the far face:
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			new Normal(v6.toVector(), v7.toVector(), v8.toVector(), v5.toVector()).submit();
+
+			v6.submit();
+			v7.submit();
+			v8.submit();
+			v5.submit();
+		}
+		GL11.glEnd();
+	}
+
+	private void drawLauncher() {
+		// draw the top base of the launcher (shape1)
+		Vertex v1 = new Vertex(-0.5f, -0.5f, 0.5f);
+		Vertex v2 = new Vertex(-0.5f, 1.5f, 0.5f);
+		Vertex v3 = new Vertex(0.5f, 1.5f, 0.5f);
+		Vertex v4 = new Vertex(0.5f, -0.5f, 0.5f);
+		Vertex v5 = new Vertex(-0.5f, -0.5f, -0.5f);
+		Vertex v6 = new Vertex(-0.5f, 1.5f, -0.5f);
+		Vertex v7 = new Vertex(0.5f, 1.5f, -0.5f);
+		Vertex v8 = new Vertex(0.5f, -0.5f, -0.5f);
+
+		// draw the side connector of the launcher (shape 2)
+		Vertex v9 = new Vertex(-1.0f, -0.25f, 0.25f);
+		Vertex v10 = new Vertex(-1.0f, 1.25f, 0.25f);
+		Vertex v11 = new Vertex(-1.0f, 1.25f, -0.25f);
+		Vertex v12 = new Vertex(-1.0f, -0.25f, -0.25f);
+
+		// draw the 3rd shape of the connector
+		Vertex v13 = new Vertex(-1.5f, -0.25f, -0.25f);
+		Vertex v14 = new Vertex(-1.5f, -0.25f, 0.25f);
+		Vertex v15 = new Vertex(-1.5f, 1.25f, 0.25f);
+		Vertex v16 = new Vertex(-1.5f, 1.25f, -0.25f);
+
+		// draw the 4th shape of the connector
+		Vertex v17 = new Vertex(-1.5f, 1.25f, 0.1f);
+		Vertex v18 = new Vertex(-1.5f, 1.25f, -0.1f);
+		Vertex v19 = new Vertex(-1.5f, 1f, -0.1f);
+		Vertex v20 = new Vertex(-1.5f, 1f, 0.1f);
+		Vertex v21 = new Vertex(-2.5f, 1.25f, 0.1f);
+		Vertex v22 = new Vertex(-2.5f, 1f, 0.1f);
+		Vertex v23 = new Vertex(-2.5f, 1f, -0.1f);
+		Vertex v24 = new Vertex(-2.5f, 1.25f, -0.1f);
+
+		// draw the 5th shape of the connector
+		Vertex v25 = new Vertex(-1.5f, 0.75f, 0.1f);
+		Vertex v26 = new Vertex(-1.5f, 0.75f, -0.1f);
+		Vertex v27 = new Vertex(-1.5f, 0.5f, -0.1f);
+		Vertex v28 = new Vertex(-1.5f, 0.5f, 0.1f);
+		Vertex v29 = new Vertex(-2.5f, 0.75f, 0.1f);
+		Vertex v30 = new Vertex(-2.5f, 0.5f, 0.1f);
+		Vertex v31 = new Vertex(-2.5f, 0.5f, -0.1f);
+		Vertex v32 = new Vertex(-2.5f, 0.75f, -0.1f);
+
+		// draw the 6th shape of the connector
+		Vertex v33 = new Vertex(0.5f, 1.5f, -0.5f);
+		Vertex v34 = new Vertex(0.5f, 1.5f, -0.25f);
+		Vertex v35 = new Vertex(0.25f, 1.5f, -0.25f);
+		Vertex v36 = new Vertex(0.25f, 1.5f, -0.5f);
+
+		Vertex v37 = new Vertex(0.375f, 2.5f, -0.375f);
+		Vertex v38 = new Vertex(0.375f, 2.5f, -0.375f);
+		Vertex v39 = new Vertex(0.375f, 2.5f, -0.375f);
+		Vertex v40 = new Vertex(0.375f, 2.5f, -0.375f);
+
+		//  draw the 7th shape of the connector
+		Vertex v41 = new Vertex(-0.5f, -0.5f, 0.5f);
+		Vertex v42 = new Vertex(-0.5f, -1.5f, 0.5f);
+		Vertex v43 = new Vertex(0.5f, -1.5f, 0.5f);
+		Vertex v44 = new Vertex(0.5f, -0.5f, 0.5f);
+		Vertex v45 = new Vertex(-0.5f, -0.5f, -0.5f);
+		Vertex v46 = new Vertex(-0.5f, -1.5f, -0.5f);
+		Vertex v47 = new Vertex(0.5f, -1.5f, -0.5f);
+		Vertex v48 = new Vertex(0.5f, -0.5f, -0.5f);
+
+		
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape1
+			// draw the near face:
+			new Normal(v3.toVector(), v2.toVector(), v1.toVector(), v4.toVector()).submit();
+
+			v3.submit();
+			v2.submit();
+			v1.submit();
+			v4.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape1
+			// draw the left face:
+			new Normal(v2.toVector(), v6.toVector(), v5.toVector(), v1.toVector()).submit();
+
+			v2.submit();
+			v6.submit();
+			v5.submit();
+			v1.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			//shape1
+			// draw the right face:
+			new Normal(v7.toVector(), v3.toVector(), v4.toVector(), v8.toVector()).submit();
+			v7.submit();
+			v3.submit();
+			v4.submit();
+			v8.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			//shape1
+			// draw the top face:
+			new Normal(v7.toVector(), v6.toVector(), v2.toVector(), v3.toVector()).submit();
+			v7.submit();
+			v6.submit();
+			v2.submit();
+			v3.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			//shape1
+			// draw the bottom face:
+			new Normal(v4.toVector(), v1.toVector(), v5.toVector(), v8.toVector()).submit();
+			v4.submit();
+			v1.submit();
+			v5.submit();
+			v8.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{			
+			//shape1
+			// draw the far face:
+			new Normal(v6.toVector(), v7.toVector(), v8.toVector(), v5.toVector()).submit();
+
+			v6.submit();
+			v7.submit();
+			v8.submit();
+			v5.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{	
+
+			// shape2
+			// draw close face
+
+			new Normal(v2.toVector(), v10.toVector(), v9.toVector(), v1.toVector()).submit();
+			v2.submit();
+			v10.submit();
+			v9.submit();
+			v1.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// top face
+			// shape2
+			new Normal(v2.toVector(), v6.toVector(), v11.toVector(), v10.toVector()).submit();
+			v2.submit();
+			v6.submit();
+			v11.submit();
+			v10.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// bottom face
+			// shape2
+
+			new Normal(v9.toVector(), v12.toVector(), v5.toVector(), v1.toVector()).submit();
+			v9.submit();
+			v12.submit();
+			v5.submit();
+			v1.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// far face
+			// shape2
+			new Normal(v11.toVector(), v6.toVector(), v5.toVector(), v12.toVector()).submit();
+			v11.submit();
+			v6.submit();
+			v5.submit();
+			v12.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// left face
+			// shape2
+			new Normal(v10.toVector(), v11.toVector(), v12.toVector(), v9.toVector()).submit();
+			v10.submit();
+			v11.submit();
+			v12.submit();
+			v9.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape3
+			// front face
+			new Normal(v10.toVector(), v15.toVector(), v14.toVector(), v9.toVector()).submit();
+
+			v10.submit();
+			v15.submit();
+			v14.submit();
+			v9.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			//shape3
+			// bottom face
+			new Normal(v12.toVector(), v9.toVector(), v14.toVector(), v13.toVector()).submit();
+			v12.submit();
+			v9.submit();
+			v14.submit();
+			v13.submit();
+		}
+		GL11.glEnd();
+		
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// far face
+			//shape3
+			new Normal(v16.toVector(), v11.toVector(), v12.toVector(), v13.toVector()).submit();
+			v16.submit();
+			v11.submit();
+			v12.submit();
+			v13.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// top face 
+			//shape 3
+			new Normal(v11.toVector(), v16.toVector(), v15.toVector(), v10.toVector()).submit();
+
+			v11.submit();
+			v16.submit();
+			v15.submit();
+			v10.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			//shape3 
+			// left face
+			new Normal(v15.toVector(), v16.toVector(), v13.toVector(), v14.toVector()).submit();
+
+			v15.submit();
+			v16.submit();
+			v13.submit();
+			v14.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape4
+			// close face
+			new Normal(v18.toVector(), v24.toVector(), v23.toVector(), v19.toVector()).submit();
+
+			v18.submit();
+			v24.submit();
+			v23.submit();
+			v19.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape4
+			// top face
+			new Normal(v17.toVector(), v21.toVector(), v24.toVector(), v18.toVector()).submit();
+			v17.submit();
+			v21.submit();
+			v24.submit();
+			v18.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape4
+			// back face 
+
+			new Normal(v17.toVector(), v20.toVector(), v22.toVector(), v21.toVector()).submit();
+			v17.submit();
+			v20.submit();
+			v22.submit();
+			v21.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape4
+			// bottom face
+			new Normal(v20.toVector(), v19.toVector(), v23.toVector(), v22.toVector()).submit();
+
+			v20.submit();
+			v19.submit();
+			v23.submit();
+			v22.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape4
+			// right face 
+			new Normal(v17.toVector(), v18.toVector(), v19.toVector(), v20.toVector()).submit();
+			v17.submit();
+			v18.submit();
+			v19.submit();
+			v20.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape4
+			// left face
+			new Normal(v24.toVector(), v21.toVector(), v22.toVector(), v23.toVector()).submit();
+
+			v24.submit();
+			v21.submit();
+			v22.submit();
+			v23.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+
+			// shape5
+			// close face
+			new Normal(v26.toVector(), v32.toVector(), v31.toVector(), v27.toVector()).submit();
+			v26.submit();
+			v32.submit();
+			v31.submit();
+			v27.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape5
+			// top face
+			new Normal(v25.toVector(), v29.toVector(), v32.toVector(), v26.toVector()).submit();
+			v25.submit();
+			v29.submit();
+			v32.submit();
+			v26.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape5
+			// back face 
+			new Normal(v25.toVector(), v28.toVector(), v30.toVector(), v29.toVector()).submit();
+			v25.submit();
+			v28.submit();
+			v30.submit();
+			v29.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape5
+			// bottom face
+			new Normal(v28.toVector(), v27.toVector(), v31.toVector(), v30.toVector()).submit();
+			v28.submit();
+			v27.submit();
+			v31.submit();
+			v30.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape5
+			// right face 
+			new Normal(v25.toVector(), v26.toVector(), v27.toVector(), v28.toVector()).submit();
+			v25.submit();
+			v26.submit();
+			v27.submit();
+			v28.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape5
+			// left face
+			new Normal(v32.toVector(), v29.toVector(), v30.toVector(), v31.toVector()).submit();
+			v32.submit();
+			v29.submit();
+			v30.submit();
+			v31.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape6
+			// near face
+			new Normal(v39.toVector(), v38.toVector(), v35.toVector(), v34.toVector()).submit();
+			v39.submit();
+			v38.submit();
+			v35.submit();
+			v34.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape6
+			// draw the left face:
+			new Normal(v37.toVector(), v36.toVector(), v35.toVector(), v38.toVector()).submit();
+			v37.submit();
+			v36.submit();
+			v35.submit();
+			v38.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape6
+			// draw the right face:
+			new Normal(v40.toVector(), v39.toVector(), v34.toVector(), v33.toVector()).submit();
+			v40.submit();
+			v39.submit();
+			v34.submit();
+			v33.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape6
+			// draw the top face:
+			new Normal(v40.toVector(), v37.toVector(), v38.toVector(), v39.toVector()).submit();
+			v40.submit();
+			v37.submit();
+			v38.submit();
+			v39.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape6
+			// draw the bottom face:
+			new Normal(v33.toVector(), v34.toVector(), v35.toVector(), v36.toVector()).submit();
+			v33.submit();
+			v34.submit();
+			v35.submit();
+			v36.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape6
+			// draw the far face:
+			new Normal(v37.toVector(), v40.toVector(), v33.toVector(), v36.toVector()).submit();
+			v37.submit();
+			v40.submit();
+			v33.submit();
+			v36.submit();
+		}
+		GL11.glEnd();
+
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape7
+			// draw the near face:
+			new Normal(v43.toVector(), v42.toVector(), v41.toVector(), v44.toVector()).submit();
+			v43.submit();
+			v42.submit();
+			v41.submit();
+			v44.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape7
+			// draw the left face:
+			new Normal(v42.toVector(), v46.toVector(), v45.toVector(), v41.toVector()).submit();
+			v42.submit();
+			v46.submit();
+			v45.submit();
+			v41.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape7
+			// draw the right face:
+			new Normal(v47.toVector(), v43.toVector(), v44.toVector(), v48.toVector()).submit();
+			v47.submit();
+			v43.submit();
+			v44.submit();
+			v48.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape7
+			// draw the top face:
+			new Normal(v47.toVector(), v46.toVector(), v42.toVector(), v43.toVector()).submit();
+			v47.submit();
+			v46.submit();
+			v42.submit();
+			v43.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape7
+			// draw the bottom face:
+			new Normal(v44.toVector(), v41.toVector(), v45.toVector(), v48.toVector()).submit();
+			v44.submit();
+			v41.submit();
+			v45.submit();
+			v48.submit();
+		}
+		GL11.glEnd();
+
+		GL11.glBegin(GL11.GL_POLYGON);
+		{
+			// shape7
+			// draw the far face:
+			new Normal(v46.toVector(), v47.toVector(), v48.toVector(), v45.toVector()).submit();
+			v46.submit();
+			v47.submit();
+			v48.submit();
+			v45.submit();
+		}
+		GL11.glEnd();
+
+	}
+
+	private void drawSphere(Colour colour, float size) { //create a sphere with custom size/colour
+		colour.submit(); //submit the colour
+		new Sphere().draw(size, 20, 20); //draw sphere of custom size
+	}
+
+}

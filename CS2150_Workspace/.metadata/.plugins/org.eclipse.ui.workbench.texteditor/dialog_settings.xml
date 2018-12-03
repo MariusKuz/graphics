@@ -2,18 +2,20 @@
 <section name="Workbench">
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog">
 		<item value="false" key="isRegEx"/>
-		<item value="" key="selection"/>
+		<item value="resetAni" key="selection"/>
 		<item value="false" key="casesensitive"/>
 		<item value="false" key="incremental"/>
 		<item value="true" key="wrap"/>
 		<item value="false" key="wholeword"/>
 		<list key="findhistory">
+			<item value="resetani"/>
+			<item value="reset"/>
+			<item value="drawBody"/>
 			<item value="GL_FILL"/>
 			<item value="spaceTexture"/>
 			<item value="ambien"/>
 			<item value="["/>
 			<item value="{"/>
-			<item value="reset"/>
 			<item value="GL_EMISSION "/>
 			<item value="emission"/>
 			<item value="GL_NORMALIZE"/>
@@ -21,10 +23,9 @@
 			<item value="groundTextures"/>
 			<item value="drawUnitPlane"/>
 			<item value="planeList"/>
-			<item value="drawUnitCube"/>
-			<item value="checkSceneInput"/>
 		</list>
 		<list key="replacehistory">
+			<item value="drawSphere"/>
 		</list>
 	</section>
 	<section name="org.eclipse.ui.texteditor.FindReplaceDialog_dialogBounds">
