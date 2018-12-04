@@ -62,8 +62,6 @@ import GraphicsLab.*;
  * <li>Press Q to make mars appear(only works while up in space)
  * <li>Pres SPACE to reset the animation to its starting position
  * </ul>
- * 2w3
- * 5446	q6	q5+4
  * 
  *
  */
@@ -91,7 +89,7 @@ public class CS2150Coursework extends GraphicsLab {
 	private float rocketSquareScale = 1f;
 	private float marsPosition = 0.0f;
 	private float sphereYCoord = 20f;
-//make baby spin
+
 	public static void main(String args[]) {
 		new CS2150Coursework().run(WINDOWED, "CS2150 Coursework Submission", 0.005f);
 	}
@@ -365,9 +363,9 @@ public class CS2150Coursework extends GraphicsLab {
 			//shininess of the launcher
 			float launcherFrontShininess = 60.0f;
 			// specular reflection of the front faces of launcher
-			float launcherFrontSpecular[] = { 0.4f, 0.4f, 0.4f, 1.0f };
+			float launcherFrontSpecular[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 			// diffuse reflection of the front faces of the launcher
-			float launcherFrontDiffuse[] = { 0.3f, 0.3f, 0.3f, 1.0f };
+			float launcherFrontDiffuse[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 
 			// Set the material properties for the launcher using OpenGL
 			GL11.glMaterialf(GL11.GL_FRONT, GL11.GL_SHININESS, launcherFrontShininess);

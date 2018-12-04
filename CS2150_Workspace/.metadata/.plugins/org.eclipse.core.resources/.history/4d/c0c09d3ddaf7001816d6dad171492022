@@ -62,8 +62,6 @@ import GraphicsLab.*;
  * <li>Press Q to make mars appear(only works while up in space)
  * <li>Pres SPACE to reset the animation to its starting position
  * </ul>
- * 2w3
- * 5446	q6	q5+4
  * 
  *
  */
@@ -91,7 +89,7 @@ public class CS2150Coursework extends GraphicsLab {
 	private float rocketSquareScale = 1f;
 	private float marsPosition = 0.0f;
 	private float sphereYCoord = 20f;
-//make baby spin
+
 	public static void main(String args[]) {
 		new CS2150Coursework().run(WINDOWED, "CS2150 Coursework Submission", 0.005f);
 	}

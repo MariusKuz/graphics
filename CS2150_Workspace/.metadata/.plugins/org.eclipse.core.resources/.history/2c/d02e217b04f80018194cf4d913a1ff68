@@ -91,6 +91,7 @@ public class CS2150Coursework extends GraphicsLab {
 	private float rocketSquareScale = 1f;
 	private float marsPosition = 0.0f;
 	private float sphereYCoord = 20f;
+	private float coneRotation = 0.0f;
 //make baby spin
 	public static void main(String args[]) {
 		new CS2150Coursework().run(WINDOWED, "CS2150 Coursework Submission", 0.005f);
@@ -153,7 +154,7 @@ public class CS2150Coursework extends GraphicsLab {
 				launcherYCorrd -= 1.0f * getAnimationScale();
 				rocketScale -= 0.03f * getAnimationScale();
 				sphereYCoord -= 1.0f * getAnimationScale();
-
+				coneRotation -= 1.0f * getAnimationScale();
 				if (rocketSquareScale >= 0.635f) { //make so the fins don't get too small
 					rocketSquareScale -= 0.02f * getAnimationScale();
 				}
@@ -170,6 +171,7 @@ public class CS2150Coursework extends GraphicsLab {
 				launcherYCorrd += 1.0f * getAnimationScale();
 				rocketScale += 0.03f * getAnimationScale();
 				sphereYCoord += 1.0f * getAnimationScale();
+				coneRotation += 1.0f * getAnimationScale();
 				if (rocketSquareScale <= 1f) {      //make so the fins don't get too big
 					rocketSquareScale += 0.02f * getAnimationScale();
 				}
@@ -300,7 +302,7 @@ public class CS2150Coursework extends GraphicsLab {
 			GL11.glPushMatrix();
 			{
 
-				GL11.glRotatef(-90.0f, 1.0f, 0.0f, 0.0f); //rotate it 
+				GL11.glRotatef(-90.0f, 1.0f, coneRotation, 0.0f); //rotate it 
 				new Cylinder().draw(0.5f, 0.0f, 1f, 10, 10); //draw it
 			}
 			GL11.glPopMatrix();
